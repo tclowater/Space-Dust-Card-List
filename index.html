@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spacedust — Card Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&family=Exo+2:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1219;
+    --bg3: #161b24;
+    --bg4: #1d2433;
+    --border: #2a3348;
+    --border-bright: #3d4f6e;
+    --accent: #4fc3f7;
+    --accent2: #e040fb;
+    --accent3: #69f0ae;
+    --warn: #ff6b35;
+    --text: #c8d8f0;
+    --text-dim: #6a7f9a;
+    --text-bright: #eaf2ff;
+    --card-w: 180px;
+    --card-h: 252px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 40%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 95% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 50%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─────────────────────────────────────── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 58px;
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(79,195,247,0.5);
+    white-space: nowrap;
+  }
+
+  .logo span { color: var(--accent2); }
+
+  nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .nav-btn:hover { color: var(--text); background: var(--bg3); }
+  .nav-btn.active {
+    color: var(--accent);
+    background: rgba(79,195,247,0.1);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 4px 4px 0 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  /* ─── BUTTONS ─────────────────────────────────────── */
+  .btn {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .btn-primary {
+    background: rgba(79,195,247,0.12);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: rgba(79,195,247,0.22); box-shadow: 0 0 12px rgba(79,195,247,0.2); }
+
+  .btn-success {
+    background: rgba(105,240,174,0.12);
+    color: var(--accent3);
+    border-color: var(--accent3);
+  }
+  .btn-success:hover { background: rgba(105,240,174,0.22); }
+
+  .btn-danger {
+    background: rgba(255,107,53,0.1);
+    color: var(--warn);
+    border-color: var(--warn);
+  }
+  .btn-danger:hover { background: rgba(255,107,53,0.2); }
+
+  .btn-purple {
+    background: rgba(224,64,251,0.1);
+    color: var(--accent2);
+    border-color: var(--accent2);
+  }
+  .btn-purple:hover { background: rgba(224,64,251,0.2); }
+
+  /* ─── MAIN LAYOUT ─────────────────────────────────── */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── SEARCH / FILTER BAR ─────────────────────────── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+
+  input[type="text"], input[type="number"], textarea, select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(79,195,247,0.1);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+  }
+
+  select {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  select option { background: var(--bg3); }
+
+  .view-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .view-toggle button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+  }
+
+  .view-toggle button.active {
+    background: var(--bg4);
+    color: var(--accent);
+  }
+
+  .view-toggle button:hover:not(.active) {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  /* ─── CARD GRID ───────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+    gap: 16px;
+  }
+
+  .card-tile {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    aspect-ratio: 5/7;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-tile:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 12px rgba(79,195,247,0.15);
+  }
+
+  .card-tile-img {
+    flex: 1;
+    overflow: hidden;
+    background: var(--bg3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-tile-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    height: 100%;
+  }
+
+  .card-placeholder svg { opacity: 0.3; }
+
+  .card-tile-info {
+    padding: 8px 10px;
+    background: var(--bg3);
+    border-top: 1px solid var(--border);
+  }
+
+  .card-tile-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .card-tile-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .card-tile-version {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(10,12,16,0.8);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    padding: 2px 5px;
+  }
+
+  /* deck count badge */
+  .card-tile-count {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 3px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    display: none;
+  }
+
+  .card-tile-count.visible { display: block; }
+
+  /* ─── LIST VIEW ───────────────────────────────────── */
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px 60px auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .card-row:hover {
+    border-color: var(--accent);
+    background: var(--bg3);
+  }
+
+  .card-row-thumb {
+    width: 32px;
+    height: 45px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .card-row-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-row-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .card-row-stat {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .card-row-stat.dim { color: var(--text-dim); }
+
+  .list-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px 60px auto;
+    gap: 12px;
+    padding: 6px 14px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ─── MODAL ───────────────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+    animation: fadeIn 0.15s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border-bright);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 860px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+    position: relative;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 1;
+  }
+
+  .modal-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-bright);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    display: flex;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  /* ─── CARD DETAIL / EDIT LAYOUT ──────────────────── */
+  .card-edit-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+  }
+
+  .card-img-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-img-box {
+    aspect-ratio: 5/7;
+    background: var(--bg3);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+
+  .card-img-box:hover { border-color: var(--accent); }
+
+  .card-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .card-img-box .img-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding: 12px;
+    z-index: 1;
+  }
+
+  #imgFileInput { display: none; }
+
+  .card-form-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-group label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 9px 12px;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  .form-full { grid-column: 1 / -1; }
+
+  /* ─── VERSIONS ────────────────────────────────────── */
+  .versions-panel {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .versions-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .versions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .version-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .version-item:hover { border-color: var(--accent); }
+  .version-item.active-version { border-color: var(--accent); background: rgba(79,195,247,0.07); }
+
+  .version-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-bright);
+  }
+
+  .version-date {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* ─── CARD DETAIL VIEW (read mode) ───────────────── */
+  .card-detail-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 28px;
+  }
+
+  .card-stat-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .stat-label {
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .stat-val {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  .card-text-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    min-height: 60px;
+  }
+
+  .notes-box {
+    background: rgba(224,64,251,0.05);
+    border: 1px solid rgba(224,64,251,0.2);
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* ─── DECKS VIEW ──────────────────────────────────── */
+  .decks-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    height: calc(100vh - 120px);
+  }
+
+  .deck-sidebar {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .deck-sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .deck-sidebar-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-bright);
+  }
+
+  .deck-list-inner {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .deck-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+  }
+
+  .deck-item:hover { background: var(--bg3); border-color: var(--border); }
+  .deck-item.active { background: rgba(79,195,247,0.08); border-color: var(--accent); }
+
+  .deck-item-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 3px;
+  }
+
+  .deck-item-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .deck-main {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .deck-main-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .deck-name-input {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .deck-name-input:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+    box-shadow: none;
+  }
+
+  .deck-content {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+  }
+
+  .deck-grid-area {
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+
+  .deck-panel-area {
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* deck card grid */
+  .deck-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .deck-card-tile {
+    position: relative;
+    aspect-ratio: 5/7;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .deck-card-tile:hover { border-color: var(--warn); transform: translateY(-2px); }
+
+  .deck-card-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .deck-card-tile-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    padding: 16px 6px 6px;
+  }
+
+  .deck-card-tile-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .deck-qty-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: var(--accent);
+    color: #000;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  .deck-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(255,107,53,0.85);
+    border: none;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .deck-card-tile:hover .deck-remove-btn { opacity: 1; }
+
+  /* pool picker */
+  .pool-search {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  .pool-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .pool-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .pool-item:hover { border-color: var(--accent3); }
+
+  .pool-item-thumb {
+    width: 28px;
+    height: 39px;
+    background: var(--bg4);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .pool-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .pool-item-info { flex: 1; min-width: 0; }
+
+  .pool-item-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pool-item-stat {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+  }
+
+  .pool-add-btn {
+    background: rgba(105,240,174,0.1);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .pool-add-btn:hover { background: rgba(105,240,174,0.25); }
+
+  /* deck list view */
+  .deck-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .deck-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .deck-list-item:hover { border-color: var(--border-bright); }
+
+  .deck-list-qty {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    width: 20px;
+    text-align: center;
+  }
+
+  .deck-list-name {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-bright);
+  }
+
+  .deck-list-stat {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .deck-list-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .qty-btn {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── DECK NOTES ──────────────────────────────────── */
+  .deck-notes-area {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  /* ─── EMPTY STATES ────────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .empty-state svg { opacity: 0.3; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* ─── TOAST ───────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast-msg {
+    background: var(--bg3);
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-bright);
+    animation: toastIn 0.2s ease, toastOut 0.3s ease 2.5s forwards;
+    pointer-events: none;
+  }
+
+  .toast-msg.success { border-color: var(--accent3); color: var(--accent3); }
+  .toast-msg.error { border-color: var(--warn); color: var(--warn); }
+
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+  /* ─── SCROLLBAR ───────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* ─── FACTION TAG ─────────────────────────────────── */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: rgba(79,195,247,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(79,195,247,0.2);
+  }
+
+  /* ─── RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 700px) {
+    .card-edit-layout, .card-detail-layout { grid-template-columns: 1fr; }
+    .decks-layout { grid-template-columns: 1fr; height: auto; }
+    .deck-content { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  .no-deck-selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pill-blue { background: rgba(79,195,247,0.12); color: var(--accent); border: 1px solid rgba(79,195,247,0.25); }
+  .pill-green { background: rgba(105,240,174,0.12); color: var(--accent3); border: 1px solid rgba(105,240,174,0.25); }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+  .deck-view-toggle {
+    display: flex;
+    gap: 4px;
+  }
+
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SPACE<span>DUST</span></div>
+  <nav>
+    <button class="nav-btn active" onclick="showView('pool')">Card Pool</button>
+    <button class="nav-btn" onclick="showView('decks')">Decks</button>
+  </nav>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="loadData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Load
+    </button>
+    <button class="btn btn-primary" onclick="saveData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Save
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ═══════════ POOL VIEW ═══════════ -->
+  <div class="view active" id="view-pool">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="poolSearch" placeholder="Search cards…" oninput="renderPool()">
+      </div>
+      <select id="poolFilter" onchange="renderPool()">
+        <option value="">All types</option>
+        <option value="unit">Units</option>
+        <option value="stratagem">Stratagems</option>
+        <option value="resource">Resources</option>
+      </select>
+      <select id="poolFactionFilter" onchange="renderPool()">
+        <option value="">All factions</option>
+      </select>
+      <div class="view-toggle">
+        <button id="gridViewBtn" class="active" onclick="setPoolView('grid')" title="Grid view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button id="listViewBtn" onclick="setPoolView('list')" title="List view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+      <button class="btn btn-success" onclick="openNewCardModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Card
+      </button>
+    </div>
+    <div id="poolContainer"></div>
+  </div>
+
+  <!-- ═══════════ DECKS VIEW ═══════════ -->
+  <div class="view" id="view-decks">
+    <div class="decks-layout">
+      <div class="deck-sidebar">
+        <div class="deck-sidebar-header">
+          <span class="deck-sidebar-title">DECKS</span>
+          <button class="btn btn-success" style="padding:5px 10px;font-size:11px" onclick="createDeck()">+ New</button>
+        </div>
+        <div class="deck-list-inner" id="deckSidebarList"></div>
+      </div>
+      <div class="deck-main" id="deckMain">
+        <div class="no-deck-selected">Select or create a deck to begin</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════ CARD DETAIL MODAL ═══════════ -->
+<div class="modal-overlay" id="cardDetailModal">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <span class="modal-title" id="detailModalTitle">Card Detail</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="openEditFromDetail()">Edit</button>
+        <button class="modal-close" onclick="closeModal('cardDetailModal')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" id="cardDetailBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════ CARD EDIT MODAL ═══════════ -->
+<div class="modal-overlay" id="cardEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="editModalTitle">Add Card</span>
+      <button class="modal-close" onclick="closeModal('cardEditModal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="card-edit-layout">
+        <!-- Image panel -->
+        <div class="card-img-panel">
+          <div class="card-img-box" onclick="document.getElementById('imgFileInput').click()">
+            <img id="editImgPreview" src="" alt="" style="display:none">
+            <div class="img-hint" id="editImgHint">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Click to upload image</span>
+              <span style="font-size:10px;color:var(--text-dim)">Optional</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:11px" onclick="clearEditImage()" id="clearImgBtn" style="display:none">Remove image</button>
+          <input type="file" id="imgFileInput" accept="image/*" onchange="handleImgUpload(event)">
+
+          <!-- Versions list -->
+          <div class="versions-panel" id="versionsPanel">
+            <div class="versions-label">
+              <span>Versions</span>
+              <button class="btn btn-ghost" style="padding:3px 8px;font-size:10px" onclick="addVersion()">+ Add</button>
+            </div>
+            <div class="versions-list" id="versionsList"></div>
+          </div>
+        </div>
+
+        <!-- Form panel -->
+        <div class="card-form-panel">
+          <div class="form-row">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Card Name</label>
+              <input type="text" id="editName" placeholder="e.g. Venomous Dilar">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type</label>
+              <select id="editType" onchange="updateFormForType()">
+                <option value="unit">Unit</option>
+                <option value="stratagem">Stratagem</option>
+                <option value="resource">Resource</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cost</label>
+              <input type="text" id="editCost" placeholder="e.g. 3c">
+            </div>
+          </div>
+          <div class="form-row" id="statFields">
+            <div class="form-group">
+              <label>Offense</label>
+              <input type="text" id="editOffense" placeholder="e.g. 5">
+            </div>
+            <div class="form-group">
+              <label>Defense</label>
+              <input type="text" id="editDefense" placeholder="e.g. 5">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Faction</label>
+              <input type="text" id="editFaction" placeholder="e.g. Scurlan Pioneers">
+            </div>
+            <div class="form-group">
+              <label>Version Name</label>
+              <input type="text" id="editVersionName" placeholder="e.g. v1, Draft, Final">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Card Text</label>
+            <textarea id="editCardText" rows="4" placeholder="Abilities, traits, effects…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Card Notes <span style="color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">(design notes for this version)</span></label>
+            <textarea id="editVersionNotes" rows="3" placeholder="Notes about this version…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Card-level Notes <span style="color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">(persist across all versions)</span></label>
+            <textarea id="editCardNotes" rows="3" placeholder="Notes that apply to all versions…"></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-danger" id="deleteCardBtn" onclick="deleteCard()" style="margin-right:auto;display:none">Delete Card</button>
+            <button class="btn btn-ghost" onclick="closeModal('cardEditModal')">Cancel</button>
+            <button class="btn btn-success" onclick="saveCard()">Save Card</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="loadFileInput" accept=".json" onchange="handleLoadFile(event)" style="display:none">
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let state = {
+  cards: [],      // { id, name, type, cost, offense, defense, faction, cardText, cardNotes, versions: [{id, name, imgData, cardText, versionNotes, createdAt}], activeVersionId }
+  decks: [],      // { id, name, notes, cards: [{cardId, versionId, qty}] }
+};
+
+let poolViewMode = 'grid'; // 'grid' | 'list'
+let activeDeckId = null;
+let deckViewMode = 'grid'; // 'grid' | 'list'
+
+// editing state
+let editingCardId = null;       // null = new card
+let editingVersionId = null;    // which version tab is active in edit modal
+let editingImgData = null;      // base64 or null
+let detailCardId = null;
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-msg' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2900);
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(name === 'pool' ? 'card' : name)) b.classList.add('active');
+  });
+  if (name === 'pool') renderPool();
+  if (name === 'decks') renderDeckSidebar();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+//  CARD HELPERS
+// ═══════════════════════════════════════════════
+function getCard(id) {
+  return state.cards.find(c => c.id === id);
+}
+
+function getActiveVersion(card) {
+  if (!card.versions || card.versions.length === 0) return null;
+  return card.versions.find(v => v.id === card.activeVersionId) || card.versions[0];
+}
+
+function getVersionImg(card) {
+  const v = getActiveVersion(card);
+  return v ? v.imgData : null;
+}
+
+function cardStatLine(card) {
+  if (card.type === 'unit') return `${card.offense || '?'}/${card.defense || '?'}`;
+  return card.type;
+}
+
+// ═══════════════════════════════════════════════
+//  POOL RENDERING
+// ═══════════════════════════════════════════════
+function filteredCards() {
+  const q = document.getElementById('poolSearch').value.toLowerCase();
+  const tf = document.getElementById('poolFilter').value;
+  const ff = document.getElementById('poolFactionFilter').value;
+  return state.cards.filter(c => {
+    const v = getActiveVersion(c);
+    const text = [c.name, c.cardText, c.faction, c.cardNotes, v?.versionNotes, v?.cardText].join(' ').toLowerCase();
+    return (!q || text.includes(q))
+        && (!tf || c.type === tf)
+        && (!ff || c.faction === ff);
+  });
+}
+
+function renderPool() {
+  updateFactionFilter();
+  const cards = filteredCards();
+  const container = document.getElementById('poolContainer');
+
+  if (cards.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <p>No cards found.<br>Add your first card to get started.</p>
+    </div>`;
+    return;
+  }
+
+  if (poolViewMode === 'grid') {
+    container.innerHTML = `<div class="card-grid">${cards.map(c => cardTileHTML(c)).join('')}</div>`;
+  } else {
+    container.innerHTML = `
+      <div class="list-header">
+        <div></div><div>Name</div><div>Cost</div><div>Stats</div><div>Faction</div><div></div>
+      </div>
+      <div class="card-list">${cards.map(c => cardRowHTML(c)).join('')}</div>`;
+  }
+}
+
+function cardTileHTML(card) {
+  const img = getVersionImg(card);
+  const vCount = card.versions ? card.versions.length : 0;
+  return `<div class="card-tile" onclick="openCardDetail('${card.id}')">
+    <div class="card-tile-img">
+      ${img
+        ? `<img src="${img}" alt="${card.name}">`
+        : `<div class="card-placeholder">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>No image</span>
+           </div>`}
+    </div>
+    <div class="card-tile-info">
+      <div class="card-tile-name">${card.name || 'Unnamed'}</div>
+      <div class="card-tile-sub">
+        <span>${card.cost || '—'}</span>
+        <span>${card.type === 'unit' ? `${card.offense || '?'}/${card.defense || '?'}` : card.type}</span>
+      </div>
+    </div>
+    ${vCount > 1 ? `<div class="card-tile-version">${vCount}v</div>` : ''}
+  </div>`;
+}
+
+function cardRowHTML(card) {
+  const img = getVersionImg(card);
+  return `<div class="card-row" onclick="openCardDetail('${card.id}')">
+    <div class="card-row-thumb">${img ? `<img src="${img}" alt="">` : ''}</div>
+    <div class="card-row-name">${card.name || 'Unnamed'}</div>
+    <div class="card-row-stat">${card.cost || '—'}</div>
+    <div class="card-row-stat">${card.type === 'unit' ? `${card.offense || '?'}/${card.defense || '?'}` : '—'}</div>
+    <div class="card-row-stat dim">${card.faction || '—'}</div>
+    <div><span class="tag">${card.type}</span></div>
+  </div>`;
+}
+
+function setPoolView(mode) {
+  poolViewMode = mode;
+  document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+  document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+  renderPool();
+}
+
+function updateFactionFilter() {
+  const sel = document.getElementById('poolFactionFilter');
+  const current = sel.value;
+  const factions = [...new Set(state.cards.map(c => c.faction).filter(Boolean))].sort();
+  sel.innerHTML = `<option value="">All factions</option>` + factions.map(f => `<option value="${f}" ${f===current?'selected':''}>${f}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  CARD DETAIL MODAL
+// ═══════════════════════════════════════════════
+function openCardDetail(cardId) {
+  detailCardId = cardId;
+  const card = getCard(cardId);
+  if (!card) return;
+  const v = getActiveVersion(card);
+
+  document.getElementById('detailModalTitle').textContent = card.name || 'Unnamed';
+
+  const img = getVersionImg(card);
+  const versionTabs = (card.versions || []).map(ver =>
+    `<div class="version-item ${ver.id === (v?.id) ? 'active-version' : ''}" onclick="switchDetailVersion('${cardId}','${ver.id}')">
+      <span class="version-name">${ver.name || 'Version'}</span>
+      <span class="version-date">${ver.createdAt ? new Date(ver.createdAt).toLocaleDateString() : ''}</span>
+    </div>`
+  ).join('');
+
+  document.getElementById('cardDetailBody').innerHTML = `
+    <div class="card-detail-layout">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="aspect-ratio:5/7;background:var(--bg3);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+          ${img
+            ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover">`
+            : `<div class="card-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>No image</span></div>`}
+        </div>
+        ${card.versions && card.versions.length > 1 ? `
+          <div>
+            <div class="section-label">Versions</div>
+            <div class="versions-list">${versionTabs}</div>
+          </div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card-stat-box">
+          <div class="stat-row"><span class="stat-label">Type</span><span class="tag">${card.type}</span></div>
+          <div class="stat-row"><span class="stat-label">Cost</span><span class="stat-val">${card.cost || '—'}</span></div>
+          ${card.type === 'unit' ? `
+          <div class="stat-row"><span class="stat-label">Offense</span><span class="stat-val">${card.offense || '—'}</span></div>
+          <div class="stat-row"><span class="stat-label">Defense</span><span class="stat-val">${card.defense || '—'}</span></div>` : ''}
+          ${card.faction ? `<div class="stat-row"><span class="stat-label">Faction</span><span style="font-size:12px;color:var(--text)">${card.faction}</span></div>` : ''}
+          ${v ? `<div class="stat-row"><span class="stat-label">Version</span><span style="font-size:12px;color:var(--text)">${v.name || '—'}</span></div>` : ''}
+        </div>
+        ${(v?.cardText || card.cardText) ? `
+          <div>
+            <div class="section-label">Card Text</div>
+            <div class="card-text-box">${(v?.cardText || card.cardText || '').replace(/</g,'&lt;')}</div>
+          </div>` : ''}
+        ${v?.versionNotes ? `
+          <div>
+            <div class="section-label">Version Notes</div>
+            <div class="notes-box">${v.versionNotes.replace(/</g,'&lt;')}</div>
+          </div>` : ''}
+        ${card.cardNotes ? `
+          <div>
+            <div class="section-label">Card Notes</div>
+            <div class="notes-box">${card.cardNotes.replace(/</g,'&lt;')}</div>
+          </div>` : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('cardDetailModal').classList.add('open');
+}
+
+function switchDetailVersion(cardId, versionId) {
+  const card = getCard(cardId);
+  if (!card) return;
+  card.activeVersionId = versionId;
+  openCardDetail(cardId);
+}
+
+function openEditFromDetail() {
+  closeModal('cardDetailModal');
+  openEditCardModal(detailCardId);
+}
+
+// ═══════════════════════════════════════════════
+//  CARD EDIT MODAL
+// ═══════════════════════════════════════════════
+function openNewCardModal() {
+  editingCardId = null;
+  editingVersionId = null;
+  editingImgData = null;
+
+  document.getElementById('editModalTitle').textContent = 'Add Card';
+  document.getElementById('deleteCardBtn').style.display = 'none';
+  clearEditForm();
+
+  // create a default first version
+  const defVerId = uid();
+  editingVersionId = defVerId;
+  window._editVersions = [{ id: defVerId, name: 'v1', imgData: null, cardText: '', versionNotes: '', createdAt: Date.now() }];
+
+  renderVersionsList();
+  loadVersionIntoForm(window._editVersions[0]);
+
+  document.getElementById('editVersionName').value = 'v1';
+  document.getElementById('cardEditModal').classList.add('open');
+}
+
+function openEditCardModal(cardId) {
+  editingCardId = cardId;
+  const card = getCard(cardId);
+  if (!card) return;
+
+  document.getElementById('editModalTitle').textContent = 'Edit Card';
+  document.getElementById('deleteCardBtn').style.display = 'inline-flex';
+
+  // deep copy versions for editing
+  window._editVersions = JSON.parse(JSON.stringify(card.versions || []));
+  if (window._editVersions.length === 0) {
+    const defVerId = uid();
+    window._editVersions.push({ id: defVerId, name: 'v1', imgData: null, cardText: '', versionNotes: '', createdAt: Date.now() });
+  }
+  editingVersionId = card.activeVersionId || window._editVersions[0].id;
+
+  // fill card-level fields
+  document.getElementById('editName').value = card.name || '';
+  document.getElementById('editType').value = card.type || 'unit';
+  document.getElementById('editCost').value = card.cost || '';
+  document.getElementById('editOffense').value = card.offense || '';
+  document.getElementById('editDefense').value = card.defense || '';
+  document.getElementById('editFaction').value = card.faction || '';
+  document.getElementById('editCardNotes').value = card.cardNotes || '';
+  updateFormForType();
+
+  // fill active version fields
+  const v = window._editVersions.find(v => v.id === editingVersionId) || window._editVersions[0];
+  editingVersionId = v.id;
+  loadVersionIntoForm(v);
+
+  renderVersionsList();
+  document.getElementById('cardEditModal').classList.add('open');
+}
+
+function loadVersionIntoForm(v) {
+  document.getElementById('editVersionName').value = v.name || '';
+  document.getElementById('editCardText').value = v.cardText || '';
+  document.getElementById('editVersionNotes').value = v.versionNotes || '';
+  editingImgData = v.imgData || null;
+  const preview = document.getElementById('editImgPreview');
+  const hint = document.getElementById('editImgHint');
+  if (editingImgData) {
+    preview.src = editingImgData;
+    preview.style.display = 'block';
+    hint.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    hint.style.display = 'flex';
+  }
+}
+
+function saveVersionToTemp() {
+  if (!editingVersionId) return;
+  const v = window._editVersions.find(x => x.id === editingVersionId);
+  if (!v) return;
+  v.name = document.getElementById('editVersionName').value || v.name;
+  v.cardText = document.getElementById('editCardText').value;
+  v.versionNotes = document.getElementById('editVersionNotes').value;
+  v.imgData = editingImgData;
+}
+
+function renderVersionsList() {
+  const list = document.getElementById('versionsList');
+  list.innerHTML = (window._editVersions || []).map(v => `
+    <div class="version-item ${v.id === editingVersionId ? 'active-version' : ''}" onclick="switchEditVersion('${v.id}')">
+      <span class="version-name">${v.name || 'Version'}</span>
+      ${window._editVersions.length > 1
+        ? `<button class="btn btn-ghost" style="padding:2px 6px;font-size:10px" onclick="event.stopPropagation();removeVersion('${v.id}')">×</button>`
+        : ''}
+    </div>`).join('');
+}
+
+function switchEditVersion(verId) {
+  saveVersionToTemp();
+  editingVersionId = verId;
+  const v = window._editVersions.find(x => x.id === verId);
+  if (v) loadVersionIntoForm(v);
+  renderVersionsList();
+}
+
+function addVersion() {
+  saveVersionToTemp();
+  const newVer = {
+    id: uid(),
+    name: `v${window._editVersions.length + 1}`,
+    imgData: null,
+    cardText: '',
+    versionNotes: '',
+    createdAt: Date.now()
+  };
+  window._editVersions.push(newVer);
+  editingVersionId = newVer.id;
+  loadVersionIntoForm(newVer);
+  renderVersionsList();
+}
+
+function removeVersion(verId) {
+  if (window._editVersions.length <= 1) { toast('Must have at least one version', 'error'); return; }
+  window._editVersions = window._editVersions.filter(v => v.id !== verId);
+  if (editingVersionId === verId) {
+    editingVersionId = window._editVersions[0].id;
+    loadVersionIntoForm(window._editVersions[0]);
+  }
+  renderVersionsList();
+}
+
+function clearEditForm() {
+  ['editName','editCost','editOffense','editDefense','editFaction','editCardText','editVersionNotes','editCardNotes','editVersionName'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('editType').value = 'unit';
+  updateFormForType();
+  editingImgData = null;
+  document.getElementById('editImgPreview').style.display = 'none';
+  document.getElementById('editImgHint').style.display = 'flex';
+}
+
+function updateFormForType() {
+  const t = document.getElementById('editType').value;
+  document.getElementById('statFields').style.display = t === 'unit' ? 'grid' : 'none';
+}
+
+function handleImgUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    // resize/compress
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 600;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      editingImgData = canvas.toDataURL('image/jpeg', 0.82);
+      document.getElementById('editImgPreview').src = editingImgData;
+      document.getElementById('editImgPreview').style.display = 'block';
+      document.getElementById('editImgHint').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function clearEditImage() {
+  editingImgData = null;
+  document.getElementById('editImgPreview').style.display = 'none';
+  document.getElementById('editImgHint').style.display = 'flex';
+}
+
+function saveCard() {
+  saveVersionToTemp();
+  const name = document.getElementById('editName').value.trim();
+  if (!name) { toast('Card name is required', 'error'); return; }
+
+  const versions = window._editVersions;
+  const activeVerId = editingVersionId || versions[0]?.id;
+
+  if (editingCardId) {
+    const card = getCard(editingCardId);
+    card.name = name;
+    card.type = document.getElementById('editType').value;
+    card.cost = document.getElementById('editCost').value.trim();
+    card.offense = document.getElementById('editOffense').value.trim();
+    card.defense = document.getElementById('editDefense').value.trim();
+    card.faction = document.getElementById('editFaction').value.trim();
+    card.cardNotes = document.getElementById('editCardNotes').value.trim();
+    card.versions = versions;
+    card.activeVersionId = activeVerId;
+    toast('Card saved', 'success');
+  } else {
+    const newCard = {
+      id: uid(),
+      name,
+      type: document.getElementById('editType').value,
+      cost: document.getElementById('editCost').value.trim(),
+      offense: document.getElementById('editOffense').value.trim(),
+      defense: document.getElementById('editDefense').value.trim(),
+      faction: document.getElementById('editFaction').value.trim(),
+      cardNotes: document.getElementById('editCardNotes').value.trim(),
+      versions,
+      activeVersionId: activeVerId,
+    };
+    state.cards.push(newCard);
+    toast('Card added', 'success');
+  }
+
+  closeModal('cardEditModal');
+  renderPool();
+}
+
+function deleteCard() {
+  if (!editingCardId) return;
+  if (!confirm('Delete this card permanently?')) return;
+  state.cards = state.cards.filter(c => c.id !== editingCardId);
+  // remove from all decks
+  state.decks.forEach(d => { d.cards = d.cards.filter(c => c.cardId !== editingCardId); });
+  closeModal('cardEditModal');
+  renderPool();
+  toast('Card deleted');
+}
+
+// ═══════════════════════════════════════════════
+//  DECKS
+// ═══════════════════════════════════════════════
+function createDeck() {
+  const d = { id: uid(), name: 'New Deck', notes: '', cards: [] };
+  state.decks.push(d);
+  activeDeckId = d.id;
+  renderDeckSidebar();
+  renderActiveDeck();
+}
+
+function renderDeckSidebar() {
+  const list = document.getElementById('deckSidebarList');
+  if (state.decks.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:30px 10px"><p>No decks yet</p></div>`;
+    return;
+  }
+  list.innerHTML = state.decks.map(d => {
+    const total = d.cards.reduce((s, c) => s + (c.qty || 1), 0);
+    return `<div class="deck-item ${d.id === activeDeckId ? 'active' : ''}" onclick="selectDeck('${d.id}')">
+      <div class="deck-item-name">${d.name || 'Unnamed Deck'}</div>
+      <div class="deck-item-count">${total} card${total !== 1 ? 's' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectDeck(id) {
+  activeDeckId = id;
+  renderDeckSidebar();
+  renderActiveDeck();
+}
+
+function renderActiveDeck() {
+  const deckMain = document.getElementById('deckMain');
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) { deckMain.innerHTML = `<div class="no-deck-selected">Select or create a deck to begin</div>`; return; }
+
+  const total = deck.cards.reduce((s, c) => s + (c.qty || 1), 0);
+
+  deckMain.innerHTML = `
+    <div class="deck-main-header">
+      <input class="deck-name-input" id="deckNameInput" value="${deck.name || ''}" placeholder="Deck name…" oninput="updateDeckName(this.value)">
+      <span class="pill pill-blue">${total} cards</span>
+      <div class="deck-view-toggle">
+        <button class="btn btn-ghost ${deckViewMode==='grid'?'btn-primary':''}" style="padding:5px 10px;font-size:11px" onclick="setDeckView('grid')">Grid</button>
+        <button class="btn btn-ghost ${deckViewMode==='list'?'btn-primary':''}" style="padding:5px 10px;font-size:11px" onclick="setDeckView('list')">List</button>
+      </div>
+      <button class="btn btn-danger" style="padding:5px 10px;font-size:11px;margin-left:auto" onclick="deleteDeck('${deck.id}')">Delete Deck</button>
+    </div>
+    <div class="deck-content">
+      <div class="deck-grid-area" id="deckGridArea">
+        ${renderDeckCards(deck)}
+      </div>
+      <div class="deck-panel-area">
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Add Cards</div>
+          <input type="text" class="pool-search" placeholder="Search card pool…" oninput="renderPoolPicker(this.value)">
+          <div class="pool-list" id="poolPickerList"></div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Deck Notes</div>
+          <div class="deck-notes-area">
+            <textarea style="width:100%;background:none;border:none;color:var(--text);font-family:'Exo 2',sans-serif;font-size:12px;line-height:1.6;resize:vertical;min-height:80px" placeholder="Notes about this deck…" oninput="updateDeckNotes(this.value)">${deck.notes || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  renderPoolPicker('');
+}
+
+function renderDeckCards(deck) {
+  if (deck.cards.length === 0) {
+    return `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><p>Add cards from the panel on the right</p></div>`;
+  }
+
+  if (deckViewMode === 'grid') {
+    return `<div class="deck-card-grid">${deck.cards.map(dc => {
+      const card = getCard(dc.cardId);
+      if (!card) return '';
+      const img = getVersionImg(card);
+      return `<div class="deck-card-tile" onclick="openCardDetail('${card.id}')">
+        ${img ? `<img src="${img}" alt="${card.name}">` : `<div class="card-placeholder" style="height:100%"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>`}
+        <div class="deck-card-tile-info"><div class="deck-card-tile-name">${card.name}</div></div>
+        <div class="deck-qty-badge">${dc.qty || 1}</div>
+        <button class="deck-remove-btn" onclick="event.stopPropagation();removeDeckCard('${dc.cardId}')">×</button>
+      </div>`;
+    }).join('')}</div>`;
+  } else {
+    return `<div class="deck-list-view">${deck.cards.map(dc => {
+      const card = getCard(dc.cardId);
+      if (!card) return '';
+      return `<div class="deck-list-item">
+        <span class="deck-list-qty">${dc.qty || 1}×</span>
+        <span class="deck-list-name">${card.name}</span>
+        <span class="deck-list-stat">${card.cost || '—'}</span>
+        <span class="deck-list-stat">${card.type === 'unit' ? `${card.offense}/${card.defense}` : card.type}</span>
+        <div class="deck-list-actions">
+          <button class="qty-btn" onclick="changeDeckQty('${dc.cardId}', -1)">−</button>
+          <button class="qty-btn" onclick="changeDeckQty('${dc.cardId}', 1)">+</button>
+          <button class="qty-btn" style="color:var(--warn)" onclick="removeDeckCard('${dc.cardId}')">×</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+}
+
+function renderPoolPicker(query) {
+  const q = (query || '').toLowerCase();
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) return;
+  const cards = state.cards.filter(c => !q || c.name.toLowerCase().includes(q));
+  const list = document.getElementById('poolPickerList');
+  if (!list) return;
+  list.innerHTML = cards.map(c => {
+    const img = getVersionImg(c);
+    const inDeck = deck.cards.find(dc => dc.cardId === c.id);
+    return `<div class="pool-item">
+      <div class="pool-item-thumb">${img ? `<img src="${img}">` : ''}</div>
+      <div class="pool-item-info">
+        <div class="pool-item-name">${c.name}</div>
+        <div class="pool-item-stat">${c.cost || '—'} ${c.type === 'unit' ? `· ${c.offense}/${c.defense}` : `· ${c.type}`}</div>
+      </div>
+      ${inDeck ? `<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent)">${inDeck.qty}×</span>` : ''}
+      <button class="pool-add-btn" onclick="addCardToDeck('${c.id}')">+</button>
+    </div>`;
+  }).join('');
+}
+
+function addCardToDeck(cardId) {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) return;
+  const existing = deck.cards.find(c => c.cardId === cardId);
+  if (existing) { existing.qty = (existing.qty || 1) + 1; }
+  else { deck.cards.push({ cardId, qty: 1 }); }
+  refreshDeckDisplay();
+}
+
+function removeDeckCard(cardId) {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) return;
+  deck.cards = deck.cards.filter(c => c.cardId !== cardId);
+  refreshDeckDisplay();
+}
+
+function changeDeckQty(cardId, delta) {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) return;
+  const entry = deck.cards.find(c => c.cardId === cardId);
+  if (!entry) return;
+  entry.qty = Math.max(1, (entry.qty || 1) + delta);
+  refreshDeckDisplay();
+}
+
+function refreshDeckDisplay() {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (!deck) return;
+  const gridArea = document.getElementById('deckGridArea');
+  if (gridArea) gridArea.innerHTML = renderDeckCards(deck);
+  renderDeckSidebar();
+  const nameInput = document.getElementById('deckNameInput');
+  if (nameInput) {
+    const total = deck.cards.reduce((s, c) => s + (c.qty || 1), 0);
+    // update count pill without full re-render
+    const pill = document.querySelector('.deck-main-header .pill-blue');
+    if (pill) pill.textContent = `${total} cards`;
+  }
+  renderPoolPicker(document.querySelector('.pool-search')?.value || '');
+}
+
+function updateDeckName(val) {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (deck) { deck.name = val; renderDeckSidebar(); }
+}
+
+function updateDeckNotes(val) {
+  const deck = state.decks.find(d => d.id === activeDeckId);
+  if (deck) deck.notes = val;
+}
+
+function setDeckView(mode) {
+  deckViewMode = mode;
+  renderActiveDeck();
+}
+
+function deleteDeck(id) {
+  if (!confirm('Delete this deck?')) return;
+  state.decks = state.decks.filter(d => d.id !== id);
+  if (activeDeckId === id) activeDeckId = null;
+  renderDeckSidebar();
+  renderActiveDeck();
+  toast('Deck deleted');
+}
+
+// ═══════════════════════════════════════════════
+//  SAVE / LOAD
+// ═══════════════════════════════════════════════
+function saveData() {
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'spacedust-data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Data saved!', 'success');
+}
+
+function loadData() {
+  document.getElementById('loadFileInput').click();
+}
+
+function handleLoadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const loaded = JSON.parse(e.target.result);
+      if (!loaded.cards || !loaded.decks) throw new Error('Invalid format');
+      state = loaded;
+      activeDeckId = null;
+      renderPool();
+      renderDeckSidebar();
+      toast('Data loaded!', 'success');
+    } catch (err) {
+      toast('Failed to load file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+renderPool();
+renderDeckSidebar();
+</script>
+</body>
+</html>
